@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Battle Hub — Free Fire Tournaments</title>
+
+  <!-- styles -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- three.js for simple 3D trophy and interactions -->
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+</head>
+<body>
+  <!-- 3D canvas background -->
+  <canvas id="bgCanvas" class="bg-canvas"></canvas>
+
+  <!-- page content -->
+  <div class="page">
+    <header class="header">
+      <div class="brand">
+        <div class="logo">BH</div>
+        <div class="brand-text">
+          <div class="title">Battle Hub</div>
+          <div class="subtitle">No Risk • No Victory</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="#tournaments" class="nav-link">Tournaments</a>
+        <a href="#how" class="nav-link">How it works</a>
+      </nav>
+    </header>
+
+    <main class="main">
+      <section class="hero">
+        <h1>Daily Free Fire Tournaments</h1>
+        <p class="muted">₹50 entry • 4–5 matches • Instant updates via Google Sheets</p>
+      </section>
+
+      <section id="tournaments" class="tournaments">
+        <div class="controls">
+          <div class="left">Upcoming tournaments</div>
+          <div class="right" id="countInfo">Loading...</div>
+        </div>
+        <div id="grid" class="grid"></div>
+      </section>
+
+      <section id="how" class="how card">
+        <h3>How it works</h3>
+        <ol>
+          <li>Click <strong>Join</strong> — Google Form / Sheet will open.</li>
+          <li>Fill details & upload payment screenshot (if required).</li>
+          <li>We add you to WhatsApp group and share room details.</li>
+          <li>Play matches — winners updated on sheet & socials.</li>
+        </ol>
+      </section>
+
+      <footer class="footer muted">Edit tournaments: open <code>script.js</code> → change <code>TOURNAMENTS</code> array (sheet links) → save → refresh</footer>
+    </main>
+  </div>
+
+  <!-- script -->
+  <script src="script.js"></script>
+</body>
+</html>
