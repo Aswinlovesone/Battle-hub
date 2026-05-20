@@ -66,7 +66,7 @@ function StatusBadge({ status }: { status: StatusType }) {
 ════════════════════════════════════ */
 function TournamentCard({ t }: { t: Tournament }) {
     const [countdown, setCountdown] = useState("");
-    const [showRoom, setShowRoom] = useState(false); // reveal at 10 mins
+    const [showRoom, setShowRoom] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
     const status = getTournamentStatus(t.matchDate ?? "", t.matchTime ?? "", t.status ?? "");
@@ -77,7 +77,6 @@ function TournamentCard({ t }: { t: Tournament }) {
         const tick = () => {
             setCountdown(getCountdownLabel(t.matchDate!, t.matchTime!));
             const ms = getMsUntilMatch(t.matchDate!, t.matchTime!);
-            // Show room if within 10 mins (includes after match started)
             setShowRoom(ms <= 10 * 60 * 1000);
         };
 
@@ -86,7 +85,6 @@ function TournamentCard({ t }: { t: Tournament }) {
         return () => clearInterval(id);
     }, [t.matchDate, t.matchTime]);
 
-    // Minutes until room unlock (for UI hint)
     const msLeft = t.matchDate && t.matchTime ? getMsUntilMatch(t.matchDate, t.matchTime) : null;
     const minsUntilReveal = msLeft !== null && msLeft > 10 * 60 * 1000
         ? Math.ceil((msLeft - 10 * 60 * 1000) / 60000)
@@ -140,7 +138,6 @@ function TournamentCard({ t }: { t: Tournament }) {
             {/* 🔐 Room Details */}
             {t.roomId ? (
                 showRoom ? (
-                    /* ── UNLOCKED ── */
                     <motion.div
                         initial={{ opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -148,7 +145,6 @@ function TournamentCard({ t }: { t: Tournament }) {
                     >
                         <p className="text-yellow-400 font-semibold text-sm">🔓 Room Details Unlocked!</p>
 
-                        {/* Room ID row */}
                         <div className="flex items-center justify-between bg-black/50 rounded-lg px-4 py-3">
                             <div>
                                 <p className="text-xs text-gray-400 mb-0.5">Room ID</p>
@@ -162,7 +158,6 @@ function TournamentCard({ t }: { t: Tournament }) {
                             </button>
                         </div>
 
-                        {/* Password row */}
                         <div className="flex items-center justify-between bg-black/50 rounded-lg px-4 py-3">
                             <div>
                                 <p className="text-xs text-gray-400 mb-0.5">Password</p>
@@ -187,7 +182,6 @@ function TournamentCard({ t }: { t: Tournament }) {
                         </div>
                     </motion.div>
                 ) : (
-                    /* ── LOCKED (room set but not 10 mins yet) ── */
                     <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 mb-4">
                         <p className="text-gray-300 text-sm font-semibold">🔒 Room details available soon</p>
                         <p className="text-gray-500 text-xs mt-1">
@@ -197,7 +191,6 @@ function TournamentCard({ t }: { t: Tournament }) {
                     </div>
                 )
             ) : (
-                /* ── Room not set yet ── */
                 status !== "past" && (
                     <div className="bg-gray-800/30 border border-gray-700/50 rounded-xl p-4 mb-4">
                         <p className="text-gray-500 text-xs">
@@ -207,7 +200,6 @@ function TournamentCard({ t }: { t: Tournament }) {
                 )
             )}
 
-            {/* Joined badge */}
             <div className="inline-block bg-green-600/20 border border-green-500 text-green-400 text-sm px-4 py-2 rounded-lg font-semibold">
                 ✅ Joined
             </div>
@@ -227,7 +219,6 @@ export default function MyTournamentsPage() {
     const [statusFilter, setStatusFilter] = useState<"all" | StatusType>("all");
     const [typeFilter, setTypeFilter] = useState<"all" | "solo" | "duo" | "squad">("all");
 
-    /* ── auth ── */
     useEffect(() => {
         const unsub = onAuthStateChanged(auth, (u) => {
             if (!u) { window.location.href = "/login"; return; }
@@ -236,7 +227,6 @@ export default function MyTournamentsPage() {
         return () => unsub();
     }, []);
 
-    /* ── fetch joined tournaments ── */
     const fetchMyTournaments = useCallback(async (uid: string) => {
         try {
             const snap = await getDocs(collection(db, "tournaments"));
@@ -247,10 +237,11 @@ export default function MyTournamentsPage() {
                     try {
                         const participantSnap = await getDoc(doc(db, "tournaments", d.id, "participants", uid));
                         if (participantSnap.exists()) {
-                            const tData = d.data() as Tournament;
+                            // ✅ FIX: spread tData first, then override id to avoid duplicate key error
+                            const tData = d.data() as Omit<Tournament, "id">;
                             joined.push({
-                                id: d.id,
                                 ...tData,
+                                id: d.id,
                                 slot: participantSnap.data().slotNumber || participantSnap.data().slot,
                             });
                         }
@@ -260,7 +251,6 @@ export default function MyTournamentsPage() {
                 })
             );
 
-            // Sort: upcoming first, then live, then past
             const order: Record<string, number> = { upcoming: 0, live: 1, past: 2 };
             joined.sort((a, b) => {
                 const sa = getTournamentStatus(a.matchDate ?? "", a.matchTime ?? "", a.status ?? "");
@@ -280,7 +270,6 @@ export default function MyTournamentsPage() {
         if (user) fetchMyTournaments(user.uid);
     }, [user, fetchMyTournaments]);
 
-    /* ── filter ── */
     const filtered = tournaments.filter((t) => {
         const matchesSearch = !searchQuery || t.name.toLowerCase().includes(searchQuery.toLowerCase());
         const s = getTournamentStatus(t.matchDate ?? "", t.matchTime ?? "", t.status ?? "");
@@ -295,7 +284,6 @@ export default function MyTournamentsPage() {
         past: tournaments.filter((t) => getTournamentStatus(t.matchDate ?? "", t.matchTime ?? "", t.status ?? "") === "past").length,
     };
 
-    /* ── loading state ── */
     if (loading) {
         return (
             <div className="min-h-screen bg-black text-white flex items-center justify-center">
@@ -308,22 +296,20 @@ export default function MyTournamentsPage() {
         <div className="min-h-screen bg-black text-white p-4 sm:p-6">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-6xl mx-auto">
 
-                {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl sm:text-4xl font-bold mb-2">🎮 My Tournaments</h1>
-                    <p className="text-gray-400">Tournaments you've joined</p>
+                    <p className="text-gray-400">Tournaments you&apos;ve joined</p>
                 </div>
 
                 {tournaments.length === 0 ? (
                     <div className="bg-[#0b0f1a] border border-white/10 rounded-xl p-12 text-center">
-                        <p className="text-gray-400 text-lg mb-4">You haven't joined any tournaments yet</p>
+                        <p className="text-gray-400 text-lg mb-4">You haven&apos;t joined any tournaments yet</p>
                         <Link href="/" className="inline-block bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded-lg font-semibold transition-all">
                             Browse Tournaments
                         </Link>
                     </div>
                 ) : (
                     <>
-                        {/* Search */}
                         <div className="mb-6">
                             <input
                                 type="text"
@@ -334,7 +320,6 @@ export default function MyTournamentsPage() {
                             />
                         </div>
 
-                        {/* Filters */}
                         <div className="mb-8 space-y-4">
                             <div>
                                 <p className="text-sm text-gray-400 mb-2">Status</p>
