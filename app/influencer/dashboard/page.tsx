@@ -28,6 +28,7 @@ type Tournament = {
     joinedPlayers?: number;
     prizePool?: number;
     type?: string;
+    game?: string; // ✅ FIX: added missing property
     matchDate?: string;
     matchTime?: string;
     status?: string;
@@ -153,18 +154,16 @@ export default function InfluencerDashboard() {
         };
 
         try {
-            // Generate tournament ID: GAME-YYYY-MM-DD-XXX
-            const dateStr = matchDate; // Already in YYYY-MM-DD format
-            const gamePrefix = game.toUpperCase(); // FREEFIRE, PUBG, or CHESS
+            const gamePrefix = game.toUpperCase();
 
-            // Get count of tournaments for this game on this date
+            // ✅ FIX: tournaments array now has game property, filter works
             const sameDayGameTournaments = tournaments.filter(
                 t => t.matchDate === matchDate && t.game === game
             );
             const count = sameDayGameTournaments.length + 1;
             const countStr = count.toString().padStart(3, '0');
 
-            const tournamentId = `${gamePrefix}-${dateStr}-${countStr}`;
+            const tournamentId = `${gamePrefix}-${matchDate}-${countStr}`;
 
             await setDoc(doc(db, "tournaments", tournamentId), {
                 name,
@@ -202,7 +201,7 @@ export default function InfluencerDashboard() {
         }
     };
 
-    /* ---------------- INSTANT WITHDRAW (NO APPROVAL) ---------------- */
+    /* ---------------- INSTANT WITHDRAW ---------------- */
 
     const instantWithdraw = async () => {
         if (withdrawAmount <= 0) {
@@ -229,13 +228,11 @@ export default function InfluencerDashboard() {
         try {
             const walletRef = doc(db, "influencerWallets", user.uid);
 
-            // Deduct from available, add to withdrawn
             await updateDoc(walletRef, {
                 available: increment(-withdrawAmount),
                 withdrawn: increment(withdrawAmount),
             });
 
-            // Create transaction record
             await addDoc(collection(db, "walletTransactions"), {
                 uid: user.uid,
                 role: "influencer",
@@ -250,10 +247,8 @@ export default function InfluencerDashboard() {
 
             alert(`✅ Withdrawal Successful!\n\n₹${withdrawAmount} has been processed to ${upiId}`);
 
-            // Refresh wallet
             await fetchWallet(user.uid);
 
-            // Reset form
             setWithdrawAmount(0);
             setUpiId("");
         } catch (error) {
@@ -435,9 +430,7 @@ export default function InfluencerDashboard() {
                                 </div>
                             </div>
 
-                            {/* ACTION BUTTONS */}
                             <div className="flex flex-wrap gap-2">
-                                {/* View Participants */}
                                 <Link
                                     href={`/admin/tournament/${t.id}/participants`}
                                     className="text-xs bg-purple-600/20 text-purple-400 
@@ -448,7 +441,6 @@ export default function InfluencerDashboard() {
                                     👥 View Participants ({t.joinedPlayers || 0})
                                 </Link>
 
-                                {/* Upload Result Button - Only if not completed and has participants */}
                                 {!t.prizesDistributed && (t.joinedPlayers || 0) > 0 && (
                                     <Link
                                         href={`/admin/tournament/${t.id}/upload-result`}
