@@ -13,12 +13,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-black text-white">
+      <body style={{ background: "var(--bg-void)", color: "var(--text-primary)" }}>
         <Navbar />
         <main className="relative z-10">
           {children}
         </main>
-
       </body>
     </html>
   );

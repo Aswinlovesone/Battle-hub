@@ -279,7 +279,7 @@ export default function ProfilePage() {
                         onClick={requestAddMoney}
                         className="w-full bg-blue-600 hover:bg-blue-500 py-2 rounded"
                     >
-                        Add Money
+                        Add Moneygit add .
                     </button>
 
                     <input
