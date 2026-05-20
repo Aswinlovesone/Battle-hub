@@ -61,9 +61,8 @@ export default function TournamentsPage() {
             const slots: Record<string, number> = {};
 
             for (const d of snap.docs) {
-                const data = d.data() as Tournament;
-                list.push({ id: d.id, ...data });
-
+                const data = d.data() as Omit<Tournament, "id">;
+                list.push({ ...data, id: d.id });
                 const participantRef = doc(
                     db,
                     "tournaments",
