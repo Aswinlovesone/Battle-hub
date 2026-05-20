@@ -33,7 +33,6 @@ type Tournament = {
   };
 };
 
-// ─── Match Status ───────────────────────────────────────────────
 type MatchStatus = "upcoming" | "started" | "completed";
 
 function getMatchStatus(t: Tournament): MatchStatus {
@@ -41,7 +40,7 @@ function getMatchStatus(t: Tournament): MatchStatus {
   if (!t.matchDate || !t.matchTime) return "upcoming";
   const matchDT = new Date(`${t.matchDate}T${t.matchTime}:00`).getTime();
   const now = Date.now();
-  if (now >= matchDT + 15 * 60 * 1000) return "completed"; // 15 mins after start → completed
+  if (now >= matchDT + 15 * 60 * 1000) return "completed";
   if (now >= matchDT) return "started";
   return "upcoming";
 }
@@ -78,30 +77,25 @@ export default function Home() {
   const [slotMap, setSlotMap] = useState<Record<string, number>>({});
   const [joiningId, setJoiningId] = useState<string | null>(null);
 
-  // 🎮 Game ID Modal
   const [showGameIdModal, setShowGameIdModal] = useState(false);
   const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
   const [gameIds, setGameIds] = useState<string[]>([""]);
 
-  // 🔍 Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<FilterStatus>("all");
   const [typeFilter, setTypeFilter] = useState<"all" | "solo" | "duo" | "squad">("all");
 
-  // ⏱ Live ticker — re-renders every second so status updates automatically
   const [, setTick] = useState(0);
   useEffect(() => {
     const id = setInterval(() => setTick((n) => n + 1), 1000);
     return () => clearInterval(id);
   }, []);
 
-  // 🔐 Auth
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
     return () => unsub();
   }, []);
 
-  // 📥 Fetch tournaments + joined status
   useEffect(() => {
     const fetchTournaments = async () => {
       try {
@@ -111,8 +105,9 @@ export default function Home() {
         const slots: Record<string, number> = {};
 
         for (const d of snap.docs) {
-          const data = d.data() as Tournament;
-          list.push({ id: d.id, ...data });
+          // ✅ FIX: cast as Omit<Tournament, "id">, spread first, then set id
+          const data = d.data() as Omit<Tournament, "id">;
+          list.push({ ...data, id: d.id });
 
           if (user) {
             try {
@@ -144,19 +139,16 @@ export default function Home() {
     fetchTournaments();
   }, [user]);
 
-  // Today midnight — hide past-day tournaments on home page
   const todayMidnight = (() => {
     const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime();
   })();
 
-  // Only today + future tournaments visible on home page
   const visibleTournaments = tournaments.filter((t) => {
     if (!t.matchDate) return true;
     const matchDay = new Date(t.matchDate); matchDay.setHours(0, 0, 0, 0);
     return matchDay.getTime() >= todayMidnight;
   });
 
-  // Filter tournaments
   const filteredTournaments = visibleTournaments.filter((t) => {
     const matchesSearch = (t.name || t.id || "")
       .toLowerCase()
@@ -167,12 +159,10 @@ export default function Home() {
     return matchesSearch && matchesStatus && matchesType;
   });
 
-  // Counts from visible only
   const upcomingCount = visibleTournaments.filter((t) => getMatchStatus(t) === "upcoming").length;
   const startedCount = visibleTournaments.filter((t) => getMatchStatus(t) === "started").length;
   const completedCount = visibleTournaments.filter((t) => getMatchStatus(t) === "completed").length;
 
-  // 🎮 Open Game ID Modal
   const openGameIdModal = (tournament: Tournament) => {
     if (!user) {
       alert("Please login first");
@@ -209,13 +199,11 @@ export default function Home() {
     return true;
   };
 
-  // 🙋 Submit & Join
   const submitAndJoinTournament = async () => {
     if (!selectedTournament || !user) return;
     if (!validateGameIds()) return;
     if (joiningId) return;
 
-    // Client-side guard
     if (getMatchStatus(selectedTournament) !== "upcoming") {
       alert("This match has already started. You cannot join now.");
       closeGameIdModal();
@@ -242,7 +230,6 @@ export default function Home() {
 
         const data = tournamentSnap.data();
 
-        // Server-side guards inside transaction
         if (data.prizesDistributed || data.status === "completed")
           throw new Error("This tournament is already completed");
 
@@ -304,7 +291,6 @@ export default function Home() {
     <div className="min-h-screen bg-black text-white p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
 
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -314,7 +300,6 @@ export default function Home() {
           <p className="text-gray-400">Join exciting tournaments and win prizes!</p>
         </motion.div>
 
-        {/* Search Bar */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -331,14 +316,12 @@ export default function Home() {
           />
         </motion.div>
 
-        {/* Filters */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="mb-8 space-y-4"
         >
-          {/* Status Filter */}
           <div>
             <p className="text-sm text-gray-400 mb-2">Status</p>
             <div className="flex flex-wrap gap-2">
@@ -362,7 +345,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Type Filter */}
           <div>
             <p className="text-sm text-gray-400 mb-2">Game Type</p>
             <div className="flex flex-wrap gap-2">
@@ -387,14 +369,12 @@ export default function Home() {
           </div>
         </motion.div>
 
-        {/* Results Count */}
         <div className="mb-4">
           <p className="text-gray-400 text-sm">
             Showing {filteredTournaments.length} tournament{filteredTournaments.length !== 1 ? "s" : ""}
           </p>
         </div>
 
-        {/* Tournament Cards */}
         {filteredTournaments.length === 0 ? (
           <div className="bg-[#0b0f1a] border border-white/10 rounded-xl p-12 text-center">
             <p className="text-gray-400 text-lg">No tournaments found</p>
@@ -422,7 +402,6 @@ export default function Home() {
               const alreadyJoined = joinedMap[t.id] || false;
               const slot = slotMap[t.id] || 0;
 
-              // Disable join when started or completed or full
               const isFull = joinedPlayers >= maxPlayers;
               const isStartedOrDone = status === "started" || status === "completed";
               const isJoining = joiningId === t.id;
@@ -453,7 +432,6 @@ export default function Home() {
                   hover:border-blue-500/40
                   hover:shadow-[0_12px_40px_-10px_rgba(37,99,235,0.35)]"
                 >
-                  {/* Type + Entry Fee */}
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-[10px] sm:text-[11px] uppercase tracking-wide
                     bg-purple-500/10 text-purple-400 px-2.5 sm:px-3 py-1 rounded-full">
@@ -465,7 +443,6 @@ export default function Home() {
                     </span>
                   </div>
 
-                  {/* Name + Status Badge */}
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <h2 className="text-base sm:text-lg font-semibold">
                       {t.name ?? t.id ?? "Tournament"}
@@ -473,19 +450,16 @@ export default function Home() {
                     {getStatusBadge(status)}
                   </div>
 
-                  {/* Date / Time */}
                   {t.matchDate && t.matchTime && (
                     <p className="text-xs text-blue-400 mb-2">
                       📅 {t.matchDate} ⏰ {t.matchTime}
                     </p>
                   )}
 
-                  {/* Players */}
                   <p className="text-xs sm:text-sm text-gray-400 mb-3">
                     {joinedPlayers} / {maxPlayers} players joined
                   </p>
 
-                  {/* Prize Pool */}
                   <p className="text-sm text-gray-300 mb-4">
                     Prize Pool
                     <span className="ml-2 text-base font-semibold text-green-400">
@@ -493,7 +467,6 @@ export default function Home() {
                     </span>
                   </p>
 
-                  {/* Prize Details Toggle */}
                   <button
                     onClick={() => setOpenPrizeId(isOpen ? null : t.id)}
                     className="flex items-center justify-between w-full
@@ -523,7 +496,6 @@ export default function Home() {
                     )}
                   </AnimatePresence>
 
-                  {/* Join / Joined */}
                   {alreadyJoined ? (
                     <div className="w-full bg-green-600/20 border border-green-500
                     rounded-xl p-4 text-center">
@@ -555,7 +527,6 @@ export default function Home() {
         )}
       </div>
 
-      {/* 🎮 GAME ID MODAL */}
       <AnimatePresence>
         {showGameIdModal && selectedTournament && (
           <motion.div
