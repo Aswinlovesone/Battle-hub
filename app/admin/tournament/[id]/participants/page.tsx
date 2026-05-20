@@ -153,17 +153,16 @@ export default function ParticipantsPage() {
     };
 
     /* 🏆 CALCULATE TOP 10 PRIZES */
-    const calculatePrizes = () => {
+    const calculatePrizes = (): Record<number, number> => {
         if (!tournament) return {};
 
         const prizePool = tournament.prizePool;
-        const totalWinners = 10; // Top 10
 
         return {
-            1: Math.round(prizePool * 0.40), // 40%
-            2: Math.round(prizePool * 0.25), // 25%
-            3: Math.round(prizePool * 0.15), // 15%
-            4: Math.round(prizePool * 0.20 / 7), // 20% split among 4-10
+            1: Math.round(prizePool * 0.40),
+            2: Math.round(prizePool * 0.25),
+            3: Math.round(prizePool * 0.15),
+            4: Math.round(prizePool * 0.20 / 7),
             5: Math.round(prizePool * 0.20 / 7),
             6: Math.round(prizePool * 0.20 / 7),
             7: Math.round(prizePool * 0.20 / 7),
@@ -175,7 +174,6 @@ export default function ParticipantsPage() {
 
     /* 🏆 OPEN WINNER MODAL */
     const openWinnerModal = () => {
-        // Initialize with existing winners if any
         if (tournament?.winners) {
             const existing: Record<number, string> = {};
             Object.entries(tournament.winners).forEach(([rank, winner]) => {
@@ -196,9 +194,6 @@ export default function ParticipantsPage() {
 
     /* ✅ VALIDATE WINNERS */
     const validateWinners = (): boolean => {
-        const prizes = calculatePrizes();
-
-        // Check all top 10 are selected
         for (let i = 1; i <= 10; i++) {
             if (!selectedWinners[i]) {
                 alert(`Please select winner for rank #${i}`);
@@ -206,7 +201,6 @@ export default function ParticipantsPage() {
             }
         }
 
-        // Check no duplicates
         const uids = Object.values(selectedWinners);
         const uniqueUids = new Set(uids);
         if (uids.length !== uniqueUids.size) {
@@ -230,23 +224,21 @@ export default function ParticipantsPage() {
             const prizes = calculatePrizes();
             const winnersData: Record<string, Winner> = {};
 
-            // Process each winner
             for (let rank = 1; rank <= 10; rank++) {
                 const uid = selectedWinners[rank];
                 const participant = participants.find(p => p.uid === uid);
                 if (!participant) continue;
 
-                const prize = prizes[rank as keyof typeof prizes];
+                // ✅ FIX: prize is now properly typed as number, fallback to 0
+                const prize: number = prizes[rank] ?? 0;
 
-                // Save winner data
                 winnersData[rank] = {
                     uid: participant.uid,
                     slot: participant.slot,
                     name: participant.name,
-                    prize: prize
+                    prize: prize,
                 };
 
-                // Credit player wallet
                 const walletRef = doc(db, "playerWallets", uid);
                 const walletSnap = await getDoc(walletRef);
 
@@ -255,14 +247,12 @@ export default function ParticipantsPage() {
                         balance: increment(prize)
                     });
                 } else {
-                    // Create wallet if doesn't exist
                     await updateDoc(walletRef, {
                         balance: prize,
                         createdAt: serverTimestamp()
                     });
                 }
 
-                // Create transaction record
                 await addDoc(collection(db, "walletTransactions"), {
                     uid: uid,
                     role: "player",
@@ -277,7 +267,6 @@ export default function ParticipantsPage() {
                 });
             }
 
-            // Credit influencer commission if applicable
             if (tournament.createdByRole === "influencer" && tournament.createdBy) {
                 const commission = Math.round(tournament.entryFee * tournament.joinedPlayers * 0.1);
 
@@ -287,7 +276,6 @@ export default function ParticipantsPage() {
                     available: increment(commission)
                 });
 
-                // Create transaction
                 await addDoc(collection(db, "walletTransactions"), {
                     uid: tournament.createdBy,
                     role: "influencer",
@@ -301,7 +289,6 @@ export default function ParticipantsPage() {
                 });
             }
 
-            // Update tournament with winners
             await updateDoc(doc(db, "tournaments", tournamentId), {
                 winners: winnersData,
                 status: "completed",
@@ -312,7 +299,6 @@ export default function ParticipantsPage() {
             alert("✅ Prizes distributed successfully!");
             setShowWinnerModal(false);
 
-            // Refresh tournament data
             const tournamentSnap = await getDoc(doc(db, "tournaments", tournamentId));
             if (tournamentSnap.exists()) {
                 setTournament(tournamentSnap.data() as Tournament);
@@ -386,7 +372,6 @@ export default function ParticipantsPage() {
         const timeDiff = matchDateTime.getTime() - now.getTime();
         const minutesUntilMatch = Math.floor(timeDiff / (1000 * 60));
 
-        // Show 15 mins before to 1 hour after match
         return minutesUntilMatch <= 15 && minutesUntilMatch >= -60;
     };
 
@@ -419,7 +404,6 @@ export default function ParticipantsPage() {
             setRoomId("");
             setRoomPassword("");
 
-            // Refresh tournament data
             const tournamentSnap = await getDoc(doc(db, "tournaments", tournamentId));
             if (tournamentSnap.exists()) {
                 setTournament(tournamentSnap.data() as Tournament);
@@ -437,6 +421,7 @@ export default function ParticipantsPage() {
         navigator.clipboard.writeText(text);
         alert(`✅ ${label} copied!`);
     };
+
     const getWinnerRank = (uid: string): number | null => {
         if (!tournament?.winners) return null;
         for (const [rank, winner] of Object.entries(tournament.winners)) {
@@ -522,7 +507,6 @@ export default function ParticipantsPage() {
                         className="flex-1 bg-black border border-white/20 rounded-lg px-4 py-2.5"
                     />
 
-                    {/* 🎮 ADD ROOM DETAILS BUTTON */}
                     {!tournament?.roomDetailsPublished && canPublishRoomDetails() && (
                         <button
                             onClick={() => setShowRoomModal(true)}
@@ -535,7 +519,6 @@ export default function ParticipantsPage() {
                         </button>
                     )}
 
-                    {/* 🏆 ENTER WINNERS BUTTON */}
                     {!tournament?.prizesDistributed && participants.length >= 10 && (
                         <button
                             onClick={openWinnerModal}
@@ -562,7 +545,7 @@ export default function ParticipantsPage() {
                     </button>
                 </div>
 
-                {/* 🎮 ROOM DETAILS DISPLAY (if published) */}
+                {/* 🎮 ROOM DETAILS DISPLAY */}
                 {tournament?.roomDetailsPublished && tournament?.roomDetails && (
                     <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 
                     border border-purple-500/50 rounded-xl p-6">
@@ -700,11 +683,10 @@ export default function ParticipantsPage() {
                                 </p>
                             </div>
 
-                            {/* WINNER SELECTIONS */}
                             <div className="space-y-4">
                                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rank) => {
                                     const prizes = calculatePrizes();
-                                    const prize = prizes[rank as keyof typeof prizes];
+                                    const prize: number = prizes[rank] ?? 0;
 
                                     return (
                                         <div key={rank} className="bg-black/40 border border-white/10 rounded-lg p-3">
@@ -734,7 +716,6 @@ export default function ParticipantsPage() {
                                 })}
                             </div>
 
-                            {/* ACTIONS */}
                             <div className="flex gap-3 pt-4">
                                 <button
                                     onClick={() => setShowWinnerModal(false)}
@@ -753,6 +734,76 @@ export default function ParticipantsPage() {
                                     py-3 rounded-lg font-semibold"
                                 >
                                     {distributing ? "Distributing..." : "💰 Distribute Prizes"}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* 🎮 ROOM DETAILS MODAL */}
+            <AnimatePresence>
+                {showRoomModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50
+                        flex items-center justify-center p-4"
+                        onClick={() => setShowRoomModal(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9 }}
+                            animate={{ scale: 1 }}
+                            exit={{ scale: 0.9 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-[#0b0f1a] border border-purple-500/30 rounded-2xl
+                            p-6 w-full max-w-md space-y-4"
+                        >
+                            <h2 className="text-2xl font-bold text-purple-400">
+                                🎮 Publish Room Details
+                            </h2>
+
+                            <div>
+                                <label className="text-sm text-gray-400 mb-1 block">Room ID</label>
+                                <input
+                                    type="text"
+                                    value={roomId}
+                                    onChange={(e) => setRoomId(e.target.value)}
+                                    placeholder="Enter Room ID"
+                                    className="w-full bg-black border border-white/20 rounded-lg px-4 py-2.5"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-sm text-gray-400 mb-1 block">Password</label>
+                                <input
+                                    type="text"
+                                    value={roomPassword}
+                                    onChange={(e) => setRoomPassword(e.target.value)}
+                                    placeholder="Enter Password"
+                                    className="w-full bg-black border border-white/20 rounded-lg px-4 py-2.5"
+                                />
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    onClick={() => setShowRoomModal(false)}
+                                    disabled={publishingRoom}
+                                    className="flex-1 bg-gray-700 hover:bg-gray-600 
+                                    disabled:opacity-50 py-3 rounded-lg font-semibold"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={publishRoomDetails}
+                                    disabled={publishingRoom}
+                                    className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600
+                                    hover:from-purple-500 hover:to-pink-500
+                                    disabled:opacity-50 disabled:cursor-not-allowed
+                                    py-3 rounded-lg font-semibold"
+                                >
+                                    {publishingRoom ? "Publishing..." : "🚀 Publish"}
                                 </button>
                             </div>
                         </motion.div>
