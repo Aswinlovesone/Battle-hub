@@ -38,16 +38,15 @@ function getMatchStatus(t: Tournament): MatchStatus {
 }
 
 const STATUS_CONFIG = {
-  upcoming: { label: "Upcoming", className: "badge badge-upcoming", dot: "bg-yellow-400" },
-  started: { label: "Live", className: "badge badge-started", dot: "bg-[var(--accent-fire)]" },
-  completed: { label: "Ended", className: "badge badge-completed", dot: "bg-[var(--accent-green)]" },
+  upcoming: { label: "Upcoming", className: "badge badge-upcoming" },
+  started: { label: "Live", className: "badge badge-started" },
+  completed: { label: "Ended", className: "badge badge-completed" },
 };
 
 const TYPE_ICONS: Record<string, string> = {
   solo: "◈", duo: "◈◈", squad: "⬡", default: "◈",
 };
 
-/* ── COUNTDOWN ── */
 function Countdown({ matchDate, matchTime }: { matchDate: string; matchTime: string }) {
   const [timeStr, setTimeStr] = useState("");
 
@@ -67,17 +66,18 @@ function Countdown({ matchDate, matchTime }: { matchDate: string; matchTime: str
   }, [matchDate, matchTime]);
 
   if (!timeStr) return null;
+
   return (
     <div className="flex items-center gap-1.5">
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-[var(--accent-cyan)]">
-        <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
       </svg>
       <span className="text-[var(--accent-cyan)] font-ui font-600 text-xs tracking-wider">{timeStr}</span>
     </div>
   );
 }
 
-/* ── TOURNAMENT CARD ── */
 function TournamentCard({
   t, alreadyJoined, slot, joiningId, onJoin, openPrizeId, setOpenPrizeId,
 }: {
@@ -107,7 +107,15 @@ function TournamentCard({
   const third = Math.round(t.prizes?.third ?? 0);
   const others = Math.round(t.prizes?.others ?? 0);
 
-  const joinLabel = isJoining ? "Joining..." : status === "completed" ? "Battle Ended" : status === "started" ? "Battle Live" : isFull ? "Full" : "Join Battle";
+  const joinLabel = isJoining
+    ? "Joining..."
+    : status === "completed"
+      ? "Battle Ended"
+      : status === "started"
+        ? "Battle Live"
+        : isFull
+          ? "Full"
+          : "Join Battle";
 
   return (
     <motion.div
@@ -119,29 +127,22 @@ function TournamentCard({
       className="battle-card corner-tl corner-br group"
     >
       <div className="card-accent-line" />
-
       <div className="p-5">
-        {/* TOP ROW */}
+
         <div className="flex items-start justify-between mb-4 gap-2">
-          <div className="flex items-center gap-2">
-            {/* TYPE BADGE */}
-            <span className="font-display text-[9px] font-700 tracking-[0.15em] text-[var(--accent-cyan)] bg-[rgba(0,212,255,0.06)] border border-[rgba(0,212,255,0.15)] px-2.5 py-1 rounded-sm uppercase">
-              {typeIcon} {typeLabel}
-            </span>
-          </div>
-          {/* STATUS */}
+          <span className="font-display text-[9px] font-700 tracking-[0.15em] text-[var(--accent-cyan)] bg-[rgba(0,212,255,0.06)] border border-[rgba(0,212,255,0.15)] px-2.5 py-1 rounded-sm uppercase">
+            {typeIcon} {typeLabel}
+          </span>
           <div className="flex items-center gap-1.5">
             {status === "started" && <span className="pulse-dot" />}
             <span className={cfg.className}>{cfg.label}</span>
           </div>
         </div>
 
-        {/* TOURNAMENT NAME */}
         <h2 className="font-ui font-700 text-base text-[var(--text-primary)] mb-1 leading-tight">
           {t.name ?? t.id ?? "Tournament"}
         </h2>
 
-        {/* DATE / TIME */}
         {t.matchDate && t.matchTime && (
           <div className="flex items-center justify-between mb-3">
             <span className="text-[var(--text-muted)] text-xs font-body">
@@ -153,10 +154,8 @@ function TournamentCard({
           </div>
         )}
 
-        {/* DIVIDER */}
         <div className="h-px bg-[var(--border-subtle)] mb-4" />
 
-        {/* STATS ROW */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="bg-[var(--bg-deep)] rounded-lg p-3">
             <p className="text-[10px] font-ui font-600 uppercase tracking-wider text-[var(--text-muted)] mb-1">Entry</p>
@@ -168,12 +167,13 @@ function TournamentCard({
           </div>
         </div>
 
-        {/* SLOT PROGRESS */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs font-ui font-600 uppercase tracking-wide text-[var(--text-muted)]">Slots</span>
             <span className="text-xs font-ui text-[var(--text-secondary)]">
-              <span className={fillPct >= 90 ? "text-[var(--accent-fire)]" : "text-[var(--accent-cyan)]"}>{joinedPlayers}</span>
+              <span className={fillPct >= 90 ? "text-[var(--accent-fire)]" : "text-[var(--accent-cyan)]"}>
+                {joinedPlayers}
+              </span>
               <span className="text-[var(--text-muted)]">/{maxPlayers}</span>
             </span>
           </div>
@@ -185,16 +185,18 @@ function TournamentCard({
           )}
         </div>
 
-        {/* PRIZE DROPDOWN */}
         <button
           onClick={() => setOpenPrizeId(isOpen ? null : t.id)}
-          className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg border border-[var(--border-subtle)] hover:border-[rgba(255,215,0,0.3)] bg-[var(--bg-deep)] hover:bg-[rgba(255,215,0,0.04)] transition-all mb-3 group/prize"
+          className="w-full flex items-center justify-between py-2.5 px-3 rounded-lg border border-[var(--border-subtle)] hover:border-[rgba(255,215,0,0.3)] bg-[var(--bg-deep)] hover:bg-[rgba(255,215,0,0.04)] transition-all mb-3"
         >
-          <span className="text-xs font-ui font-600 uppercase tracking-wider text-[var(--accent-gold)] group-hover/prize:glow-gold">
+          <span className="text-xs font-ui font-600 uppercase tracking-wider text-[var(--accent-gold)]">
             🏆 Prize Breakdown
           </span>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
-            className={`text-[var(--text-muted)] transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}>
+          <svg
+            width="12" height="12" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" strokeWidth="2.5"
+            className={`text-[var(--text-muted)] transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
+          >
             <polyline points="6 9 12 15 18 9" />
           </svg>
         </button>
@@ -208,7 +210,7 @@ function TournamentCard({
               transition={{ duration: 0.25 }}
               className="overflow-hidden mb-3"
             >
-              <div className="bg-[var(--bg-void)] border border-[rgba(255,215,0,0.1)] rounded-lg p-3 space-y-0">
+              <div className="bg-[var(--bg-void)] border border-[rgba(255,215,0,0.1)] rounded-lg p-3">
                 {[
                   { label: "🥇 1st Place", value: first, color: "#ffd700" },
                   { label: "🥈 2nd Place", value: second, color: "#c0c0c0" },
@@ -225,7 +227,6 @@ function TournamentCard({
           )}
         </AnimatePresence>
 
-        {/* JOIN / JOINED */}
         {alreadyJoined ? (
           <div className="rounded-lg border border-[rgba(0,255,136,0.2)] bg-[rgba(0,255,136,0.04)] p-3 text-center">
             <p className="text-xs font-ui font-600 uppercase tracking-wider text-[var(--accent-green)] mb-1">✓ Registered</p>
@@ -233,22 +234,22 @@ function TournamentCard({
           </div>
         ) : (
           <button
-            onClick={() => !joinDisabled && onJoin(t)}
+            onClick={() => { if (!joinDisabled) onJoin(t); }}
             disabled={joinDisabled}
             className={`w-full py-3 rounded-lg font-ui font-700 text-sm uppercase tracking-wider transition-all duration-200 ${joinDisabled
-              ? "bg-[var(--bg-surface)] text-[var(--text-muted)] cursor-not-allowed"
-              : "btn-fire text-white"
+                ? "bg-[var(--bg-surface)] text-[var(--text-muted)] cursor-not-allowed"
+                : "btn-fire text-white"
               }`}
           >
             {joinLabel}
           </button>
         )}
+
       </div>
     </motion.div>
   );
 }
 
-/* ── MAIN PAGE ── */
 export default function Home() {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [user, setUser] = useState<any>(null);
@@ -298,10 +299,16 @@ export default function Home() {
     fetchTournaments();
   }, [user]);
 
-  const todayMidnight = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); })();
+  const todayMidnight = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  })();
+
   const visible = tournaments.filter((t) => {
     if (!t.matchDate) return true;
-    const d = new Date(t.matchDate); d.setHours(0, 0, 0, 0);
+    const d = new Date(t.matchDate);
+    d.setHours(0, 0, 0, 0);
     return d.getTime() >= todayMidnight;
   });
 
@@ -327,7 +334,11 @@ export default function Home() {
     setShowGameIdModal(true);
   };
 
-  const closeModal = () => { setShowGameIdModal(false); setSelectedTournament(null); setGameIds([""]); };
+  const closeModal = () => {
+    setShowGameIdModal(false);
+    setSelectedTournament(null);
+    setGameIds([""]);
+  };
 
   const submitAndJoin = async () => {
     if (!selectedTournament || !user) return;
@@ -336,7 +347,9 @@ export default function Home() {
     }
     if (joiningId) return;
     if (getMatchStatus(selectedTournament) !== "upcoming") {
-      alert("This match has already started."); closeModal(); return;
+      alert("This match has already started.");
+      closeModal();
+      return;
     }
     setJoiningId(selectedTournament.id);
     const tRef = doc(db, "tournaments", selectedTournament.id);
@@ -353,42 +366,65 @@ export default function Home() {
         const pSnap = await tx.get(pRef);
         if (pSnap.exists()) throw new Error("Already joined");
         assignedSlot = data.joinedPlayers + 1;
-        tx.set(pRef, { uid: user.uid, userName: user.displayName || "Player", userEmail: user.email, slotNumber: assignedSlot, gameIds, joinedAt: serverTimestamp() });
+        tx.set(pRef, {
+          uid: user.uid,
+          userName: user.displayName || "Player",
+          userEmail: user.email,
+          slotNumber: assignedSlot,
+          gameIds,
+          joinedAt: serverTimestamp(),
+        });
         tx.update(tRef, { joinedPlayers: assignedSlot });
       });
       setJoinedMap((p) => ({ ...p, [selectedTournament.id]: true }));
       setSlotMap((p) => ({ ...p, [selectedTournament.id]: assignedSlot }));
-      setTournaments((p) => p.map((t) => t.id === selectedTournament.id ? { ...t, joinedPlayers: (t.joinedPlayers || 0) + 1 } : t));
+      setTournaments((p) =>
+        p.map((t) =>
+          t.id === selectedTournament.id
+            ? { ...t, joinedPlayers: (t.joinedPlayers || 0) + 1 }
+            : t
+        )
+      );
       closeModal();
       alert(`✅ Joined! Your Slot: #${assignedSlot}`);
     } catch (err: any) {
       alert(err.message || "Join failed");
-    } finally { setJoiningId(null); }
+    } finally {
+      setJoiningId(null);
+    }
   };
 
-  /* ── SKELETON ── */
   if (loading) {
     return (
-      <div className="min-h-screen relative z-10 p-4 sm:p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="skeleton h-10 w-64 mb-2" />
-          <div className="skeleton h-5 w-48 mb-8" />
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3, 4, 5, 6].map((i) => <div key={i} className="skeleton h-80" />)}
+      <>
+        <BattleHubHero />
+        <div className="min-h-screen relative z-10 p-4 sm:p-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="skeleton h-10 w-64 mb-2" />
+            <div className="skeleton h-5 w-48 mb-8" />
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="skeleton h-80" />
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
     <>
       <BattleHubHero />
+
       <div id="tournaments" className="min-h-screen relative z-10 p-4 sm:p-6 pb-16">
         <div className="max-w-7xl mx-auto">
 
-          {/* HERO HEADER */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8 pt-2">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 pt-2"
+          >
             <div className="flex items-baseline gap-3 mb-1">
               <h1 className="font-display text-3xl sm:text-4xl font-900 text-[var(--text-primary)] tracking-tight">
                 TOURNAMENTS
@@ -400,15 +436,23 @@ export default function Home() {
             <p className="text-[var(--text-secondary)] font-body text-sm">
               No Risk No Victory — Enter the arena.
             </p>
-            {/* Thin accent line */}
             <div className="mt-4 h-px w-full bg-gradient-to-r from-[var(--accent-fire)] via-[var(--accent-cyan)] to-transparent opacity-30" />
           </motion.div>
 
-          {/* SEARCH */}
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="mb-5">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08 }}
+            className="mb-5"
+          >
             <div className="relative">
-              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+              <svg
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
+                width="14" height="14" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" strokeWidth="2"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
               <input
                 type="text"
@@ -420,9 +464,12 @@ export default function Home() {
             </div>
           </motion.div>
 
-          {/* FILTERS */}
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="mb-7 space-y-3">
-            {/* STATUS */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.12 }}
+            className="mb-7 space-y-3"
+          >
             <div className="flex flex-wrap gap-2">
               {([
                 { key: "all", label: `All · ${counts.all}` },
@@ -430,13 +477,15 @@ export default function Home() {
                 { key: "started", label: `Live · ${counts.started}` },
                 { key: "completed", label: `Ended · ${counts.completed}` },
               ] as const).map(({ key, label }) => (
-                <button key={key} onClick={() => setStatusFilter(key)}
-                  className={`filter-pill ${statusFilter === key ? `active-${key}` : ""}`}>
+                <button
+                  key={key}
+                  onClick={() => setStatusFilter(key)}
+                  className={`filter-pill ${statusFilter === key ? `active-${key}` : ""}`}
+                >
                   {label}
                 </button>
               ))}
             </div>
-            {/* TYPE */}
             <div className="flex flex-wrap gap-2">
               {([
                 { key: "all", label: "All Modes" },
@@ -444,15 +493,17 @@ export default function Home() {
                 { key: "duo", label: "◈◈ Duo" },
                 { key: "squad", label: "⬡ Squad" },
               ] as const).map(({ key, label }) => (
-                <button key={key} onClick={() => setTypeFilter(key)}
-                  className={`filter-pill ${typeFilter === key ? "active-type" : ""}`}>
+                <button
+                  key={key}
+                  onClick={() => setTypeFilter(key)}
+                  className={`filter-pill ${typeFilter === key ? "active-type" : ""}`}
+                >
                   {label}
                 </button>
               ))}
             </div>
           </motion.div>
 
-          {/* COUNT */}
           <div className="flex items-center justify-between mb-5">
             <p className="text-xs font-ui font-600 uppercase tracking-widest text-[var(--text-muted)]">
               {filtered.length} Battle{filtered.length !== 1 ? "s" : ""} Found
@@ -460,18 +511,26 @@ export default function Home() {
             {counts.started > 0 && (
               <div className="flex items-center gap-1.5">
                 <span className="pulse-dot" />
-                <span className="text-xs font-ui font-600 uppercase tracking-wider text-[var(--accent-fire)]">{counts.started} Live Now</span>
+                <span className="text-xs font-ui font-600 uppercase tracking-wider text-[var(--accent-fire)]">
+                  {counts.started} Live Now
+                </span>
               </div>
             )}
           </div>
 
-          {/* EMPTY STATE */}
           {filtered.length === 0 ? (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="battle-card p-16 text-center">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="battle-card p-16 text-center"
+            >
               <div className="font-display text-4xl mb-4 opacity-20">⬡</div>
-              <p className="font-ui font-700 text-base uppercase tracking-wider text-[var(--text-secondary)]">No Battles Found</p>
-              <p className="text-xs text-[var(--text-muted)] mt-2 font-body">Adjust your filters or check back soon</p>
+              <p className="font-ui font-700 text-base uppercase tracking-wider text-[var(--text-secondary)]">
+                No Battles Found
+              </p>
+              <p className="text-xs text-[var(--text-muted)] mt-2 font-body">
+                Adjust your filters or check back soon
+              </p>
             </motion.div>
           ) : (
             <motion.div
@@ -494,13 +553,15 @@ export default function Home() {
               </AnimatePresence>
             </motion.div>
           )}
+
         </div>
 
-        {/* GAME ID MODAL */}
         <AnimatePresence>
           {showGameIdModal && selectedTournament && (
             <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               className="fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4"
               onClick={closeModal}
             >
@@ -512,16 +573,12 @@ export default function Home() {
                 onClick={(e) => e.stopPropagation()}
                 className="battle-card w-full max-w-md overflow-hidden"
               >
-                {/* Modal header accent */}
                 <div className="h-1 w-full bg-gradient-to-r from-[var(--accent-fire)] via-[var(--accent-cyan)] to-transparent" />
-
                 <div className="p-6 space-y-5">
                   <div>
                     <h2 className="font-display text-lg text-[var(--text-primary)] mb-1">Enter Game IDs</h2>
                     <p className="text-xs font-body text-[var(--text-muted)]">Required to register for the tournament</p>
                   </div>
-
-                  {/* Tournament info */}
                   <div className="bg-[var(--bg-deep)] border border-[var(--border-subtle)] rounded-lg p-3">
                     <p className="font-ui font-700 text-sm text-[var(--text-primary)]">
                       {selectedTournament.name ?? selectedTournament.id}
@@ -536,8 +593,6 @@ export default function Home() {
                       </span>
                     </div>
                   </div>
-
-                  {/* Game ID inputs */}
                   <div className="space-y-3">
                     {gameIds.map((id, index) => (
                       <div key={index}>
@@ -559,15 +614,18 @@ export default function Home() {
                       </div>
                     ))}
                   </div>
-
-                  {/* Buttons */}
                   <div className="flex gap-3">
-                    <button onClick={closeModal}
-                      className="flex-1 py-3 rounded-lg font-ui font-700 text-sm uppercase tracking-wider btn-cyan border border-[var(--border-subtle)]">
+                    <button
+                      onClick={closeModal}
+                      className="flex-1 py-3 rounded-lg font-ui font-700 text-sm uppercase tracking-wider btn-cyan border border-[var(--border-subtle)]"
+                    >
                       Cancel
                     </button>
-                    <button onClick={submitAndJoin} disabled={joiningId !== null}
-                      className="flex-1 py-3 rounded-lg font-ui font-700 text-sm uppercase tracking-wider btn-fire text-white disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button
+                      onClick={submitAndJoin}
+                      disabled={joiningId !== null}
+                      className="flex-1 py-3 rounded-lg font-ui font-700 text-sm uppercase tracking-wider btn-fire text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                       {joiningId ? "Joining..." : "Confirm →"}
                     </button>
                   </div>
@@ -576,8 +634,8 @@ export default function Home() {
             </motion.div>
           )}
         </AnimatePresence>
+
       </div>
-    </div >
     </>
   );
 }
