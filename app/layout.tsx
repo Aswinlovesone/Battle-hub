@@ -4,6 +4,9 @@ import Navbar from "./components/Navbar";
 export const metadata = {
   title: "Battle Hub",
   description: "No Risk No Victory",
+  verification: {
+    google: "P4PZq6tFW3XzvLVtzHnoADbNqNoiW_GH3L5ovgWzwso",
+  },
 };
 
 export default function RootLayout({
